@@ -1,6 +1,7 @@
 // Cargar datos de inflación general índice vigente
 let datosInfMensual = [];
-let mapa = null; // Definimos el mapa con alcance amplio para poder actualizarlo
+let mapa = null;
+let mapa_nuevo = null; // Definimos el mapa con alcance amplio para poder actualizarlo
 
 async function leerDatosInfMensual() {
     try {
@@ -19,6 +20,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const contenedorMapa = document.getElementById('mapa');
     mapa = echarts.init(contenedorMapa);
     mapa.showLoading();
+    const contenedorMapaNuevo = document.getElementById('mapaNuevo');
+    mapaNuevo = echarts.init(contenedorMapaNuevo);
+    mapaNuevo.showLoading();
 
     const urlGeoJSON = 'ProvinciasArgentina.geojson';
 
@@ -36,6 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const datosMapa = respuestaGeo;
         
         mapa.hideLoading();
+        mapaNuevo.hideLoading();
 
         // Normalizar nombres del GeoJSON para compatibilidad con tildes
         datosMapa.features.forEach(feature => {
@@ -57,21 +62,25 @@ document.addEventListener("DOMContentLoaded", async () => {
             
             const fechaFinal = selector.value;
             filtrarYActualizarMapa(fechaFinal);
+            filtrarYActualizarMapaNuevo(fechaFinal);
         }
 
     } catch (error) {
         console.error("Error en la inicialización:", error);
         mapa.hideLoading();
+        mapaNuevo.hideLoading();
     }
 
     // Escuchar el cambio de fecha desde el HTML
     document.getElementById('filtro-fecha').addEventListener('change', (evento) => {
         filtrarYActualizarMapa(evento.target.value);
+        filtrarYActualizarMapaNuevo(evento.target.value);
     });
 
     // Hacer que el gráfico sea responsivo
     window.addEventListener('resize', () => {
-        mapa.resize(); // Corregido: antes decía 'miGrafico'
+        mapa.resize();
+        mapaNuevo.resize();
     });
 });
 
@@ -130,7 +139,7 @@ function filtrarYActualizarMapa(fechaAFiltrar) {
             calculable: true,
             inRange: {
                 // Escala de colores: de tonos claros/fríos a oscuros/cálidos
-                color: ['#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027']
+                color: ['#fee5d9','#fcae91','#fb6a4a','#cb181d','#99000d']
             }
         },
         series: [
@@ -146,4 +155,52 @@ function filtrarYActualizarMapa(fechaAFiltrar) {
 
     // Actualizar el gráfico aplicando animaciones de transición automáticas
     mapa.setOption(opcionesMapa);
+}
+
+
+function filtrarYActualizarMapaNuevo(fechaAFiltrar) {
+    // Filtrar registros correspondientes a la fecha
+    const registrosFiltrados = datosInfMensual.filter(item => item.Fecha.startsWith(fechaAFiltrar));
+
+    // Mapear los datos al formato nativo de ECharts { name, value }
+    const datosParaEchartsNuevo = registrosFiltrados.map(item => ({
+        name: item.Provincia,
+        value: item.var_mens_pond_gral
+    }));
+    const todosLosValoresNuevo = datosParaEchartsNuevo.map(item => item.value);
+    const valorMinimoNuevo = todosLosValoresNuevo.length > 0 ? Math.min(...todosLosValoresNuevo) : 0;
+    const valorMaximoNuevo = todosLosValoresNuevo.length > 0 ? Math.max(...todosLosValoresNuevo) : 100;
+    const opcionesMapaNuevo = {
+        title: {
+            text: 'Mapa de Argentina Nuevo',
+            subtext: `Período: ${fechaAFiltrar}`
+        },
+        tooltip: {
+            trigger: 'item',
+            formatter: '{b}: {c}'
+        },
+        visualMap: {
+            min: valorMinimoNuevo,
+            max: valorMaximoNuevo,
+            left: 'right',
+            top: 'bottom',
+            text: ['Alto', 'Bajo'],
+            calculable: true,
+            inRange: {
+                color: ['#fff7ec','#fee8c8','#fdbb84','#fc8d59','#ef3b2c']
+            }
+        },
+        series: [
+            {
+                name: 'Datos',
+                type: 'map',
+                map: 'mapaArgentina',
+                roam: true,
+                data: datosParaEchartsNuevo // Datos dinámicos según el filtro
+            }
+        ]
+    };
+
+    // Actualizar el gráfico aplicando animaciones de transición automáticas
+    mapaNuevo.setOption(opcionesMapaNuevo);
 }
