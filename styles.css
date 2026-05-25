@@ -2,3 +2,15 @@
     width: 100%;
     height: 600px;
 }
+
+body {
+    background-color: #121212;;
+}
+
+.contenedor-neon {
+    background-color: #111422; /* Mantiene el fondo oscuro interno */
+    border-radius: 15px;       /* Controla el redondeado de las esquinas */
+    box-shadow: 0 0 15px 2px rgba(255, 255, 255, 0.3); /* Crea la sombra blanca sutil */
+    padding: 10px;             /* Deja un pequeño aire para que no se corte el mapa */
+    transition: box-shadow 0.3s ease; /* Suaviza el efecto visual */
+}

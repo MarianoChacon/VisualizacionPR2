@@ -9,7 +9,7 @@
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body background="black">
 
     <div class="controles">
         <label for="filtro-fecha">Seleccionar Fecha:</label>
@@ -18,16 +18,16 @@
     </div>
 
     
-    <div style="display: flex; gap: 20px; width: 100%; max-width: 900px; margin: 0 auto; justify-content: center;">
+    <div style="display: flex; gap: 40px; width: 100%; max-width: 1200px; margin: 0 auto; align-items: center; justify-content: space-between;">
         
         <!-- Primer mapa -->
-        <div class="container mt-5" style="flex: 1;">
-            <div id="mapa" class="mapa"></div>
+        <div class="container mt-5" style="flex: 1;margin-right: auto; opacity: 0.7;">
+            <div id="mapa" style="height: 450px; width: 100%;"></div>
         </div>
         
         <!-- Mapa nuevo -->
-        <div class="container mt-5" style="flex: 1;">
-            <div id="mapaNuevo" class="mapa"></div>
+        <div class="container mt-5 contenedor-neon" style="flex: 1.6;">
+            <div id="mapaNuevo" style="height: 550px; width: 100%;"></div>
         </div>
 
     </div>

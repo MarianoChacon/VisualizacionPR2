@@ -1,7 +1,6 @@
-// Cargar datos de inflación general índice vigente
 let datosInfMensual = [];
 let mapa = null;
-let mapa_nuevo = null; // Definimos el mapa con alcance amplio para poder actualizarlo
+let mapaNuevo = null; // Definimos el alcance correcto para ambos mapas
 
 async function leerDatosInfMensual() {
     try {
@@ -16,10 +15,11 @@ async function leerDatosInfMensual() {
 // 1. Esperar a que el DOM esté completamente cargado
 document.addEventListener("DOMContentLoaded", async () => {
     
-    // 2. Seleccionar el contenedor HTML e inicializar el Mapa
+    // 2. Seleccionar los contenedores HTML e inicializar los Mapas
     const contenedorMapa = document.getElementById('mapa');
     mapa = echarts.init(contenedorMapa);
     mapa.showLoading();
+
     const contenedorMapaNuevo = document.getElementById('mapaNuevo');
     mapaNuevo = echarts.init(contenedorMapaNuevo);
     mapaNuevo.showLoading();
@@ -59,10 +59,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             const selector = document.getElementById('filtro-fecha');
             selector.selectedIndex = selector.options.length - 1;
             
-            
             const fechaFinal = selector.value;
-            filtrarYActualizarMapa(fechaFinal);
-            filtrarYActualizarMapaNuevo(fechaFinal);
+            // Llamada única unificada para sincronizar escalas al inicio
+            actualizarMapasSincronizados(fechaFinal);
         }
 
     } catch (error) {
@@ -71,13 +70,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         mapaNuevo.hideLoading();
     }
 
-    // Escuchar el cambio de fecha desde el HTML
+    // Escuchar el cambio de fecha desde el HTML usando la función unificada
     document.getElementById('filtro-fecha').addEventListener('change', (evento) => {
-        filtrarYActualizarMapa(evento.target.value);
-        filtrarYActualizarMapaNuevo(evento.target.value);
+        actualizarMapasSincronizados(evento.target.value);
     });
 
-    // Hacer que el gráfico sea responsivo
+    // Hacer que los gráficos sean responsivos
     window.addEventListener('resize', () => {
         mapa.resize();
         mapaNuevo.resize();
@@ -90,10 +88,9 @@ function cargarFechasDisponibles() {
     
     // 1. Extraer las fechas y recortarlas para quedarnos solo con "AAAA-MM"
     const todasLasFechasCortas = datosInfMensual.map(item => {
-        // Tomamos una fecha limpia (sin ISO "T") y extraemos los primeros 7 caracteres
-        const fechaLimpia = item.Fecha.includes('T') ? item.Fecha.split('T')[0] : item.Fecha;
-        return fechaLimpia.substring(0, 7); // Resultado: "2016-12" en vez de "2016-12-01"
-    });
+        const fechaLimpia = item.Fecha && item.Fecha.includes('T') ? item.Fecha.split('T')[0] : item.Fecha;
+        return fechaLimpia ? fechaLimpia.substring(0, 7) : '';
+    }).filter(Boolean);
     
     // 2. Eliminar duplicados y ordenar cronológicamente
     const fechasUnicas = [...new Set(todasLasFechasCortas)].sort();
@@ -102,28 +99,47 @@ function cargarFechasDisponibles() {
     selector.innerHTML = ''; 
     fechasUnicas.forEach(fechaAnioMes => {
         const opcion = document.createElement('option');
-        opcion.value = fechaAnioMes;       // El valor técnico que usará el filtro (ej: "2016-12")
-        opcion.textContent = fechaAnioMes; // Lo que ve el usuario en el desplegable (ej: "2016-12")
+        opcion.value = fechaAnioMes;       
+        opcion.textContent = fechaAnioMes; 
         selector.appendChild(opcion);
     });
 }
 
-// Filtra datosGlobales por la fecha seleccionada y actualiza el mapa de ECharts
-function filtrarYActualizarMapa(fechaAFiltrar) {
-    // Filtrar registros correspondientes a la fecha
-    const registrosFiltrados = datosInfMensual.filter(item => item.Fecha.startsWith(fechaAFiltrar));
+// Filtra datosGlobales por la fecha seleccionada y actualiza ambos mapas con escalas comparables
+function actualizarMapasSincronizados(fechaAFiltrar) {
+    // 1. Filtrar registros una sola vez para optimizar rendimiento
+    const registrosFiltrados = datosInfMensual.filter(item => item.Fecha && item.Fecha.startsWith(fechaAFiltrar));
 
-    // Mapear los datos al formato nativo de ECharts { name, value }
-    const datosParaEcharts = registrosFiltrados.map(item => ({
+    // 2. Mapear datos específicos para cada mapa
+    const datosMapaIzquierdo = registrosFiltrados.map(item => ({
         name: item.Provincia,
         value: item.v_m_IPC
     }));
-    const todosLosValores = datosParaEcharts.map(item => item.value);
-    const valorMinimo = todosLosValores.length > 0 ? Math.min(...todosLosValores) : 0;
-    const valorMaximo = todosLosValores.length > 0 ? Math.max(...todosLosValores) : 100;
+
+    const datosMapaDerecho = registrosFiltrados.map(item => ({
+        name: item.Provincia,
+        value: item.var_mens_pond_gral
+    }));
+
+    // 3. Extraer arrays con todos los valores numéricos
+    const valoresIzquierdo = datosMapaIzquierdo.map(item => item.value).filter(v => v !== undefined && v !== null);
+    const valoresDerecho = datosMapaDerecho.map(item => item.value).filter(v => v !== undefined && v !== null);
+
+    // 4. Calcular mínimos y máximos locales de cada conjunto
+    const valorMinimo = valoresIzquierdo.length > 0 ? Math.min(...valoresIzquierdo) : 0;
+    const valorMaximo = valoresIzquierdo.length > 0 ? Math.max(...valoresIzquierdo) : 100;
+
+    const valorMinimoNuevo = valoresDerecho.length > 0 ? Math.min(...valoresDerecho) : 0;
+    const valorMaximoNuevo = valoresDerecho.length > 0 ? Math.max(...valoresDerecho) : 100;
+
+    // 5. RANGOS GLOBALES COMPARABLES (Mínimo de los mínimos y Máximo de los máximos)
+    const minGlobal = Math.min(valorMinimo, valorMinimoNuevo);
+    const maxGlobal = Math.max(valorMaximo, valorMaximoNuevo);
+
+    // 6. Configurar y actualizar Mapa Izquierdo (Paleta Mate)
     const opcionesMapa = {
         title: {
-            text: 'Mapa de Argentina',
+            text: 'IPC con ponderadores 2004',
             subtext: `Período: ${fechaAFiltrar}`
         },
         tooltip: {
@@ -131,48 +147,33 @@ function filtrarYActualizarMapa(fechaAFiltrar) {
             formatter: '{b}: {c}'
         },
         visualMap: {
-            min: valorMinimo,
-            max: valorMaximo,
+            min: minGlobal, 
+            max: maxGlobal, 
             left: 'left',
             top: 'bottom',
             text: ['Alto', 'Bajo'],
             calculable: true,
             inRange: {
-                // Escala de colores: de tonos claros/fríos a oscuros/cálidos
-                color: ['#fee5d9','#fcae91','#fb6a4a','#cb181d','#99000d']
+                color: ['#fee5d9', '#fcae91', '#fb6a4a', '#cb181d', '#99000d']
             }
         },
-        series: [
-            {
-                name: 'Datos',
-                type: 'map',
-                map: 'mapaArgentina',
-                roam: true,
-                data: datosParaEcharts // Datos dinámicos según el filtro
+        series: [{
+            name: 'Datos',
+            type: 'map',
+            map: 'mapaArgentina',
+            roam: true,
+            data: datosMapaIzquierdo,
+            itemStyle: {
+                borderColor: '#1f0e10b3'
             }
-        ]
+        }]
     };
-
-    // Actualizar el gráfico aplicando animaciones de transición automáticas
     mapa.setOption(opcionesMapa);
-}
 
-
-function filtrarYActualizarMapaNuevo(fechaAFiltrar) {
-    // Filtrar registros correspondientes a la fecha
-    const registrosFiltrados = datosInfMensual.filter(item => item.Fecha.startsWith(fechaAFiltrar));
-
-    // Mapear los datos al formato nativo de ECharts { name, value }
-    const datosParaEchartsNuevo = registrosFiltrados.map(item => ({
-        name: item.Provincia,
-        value: item.var_mens_pond_gral
-    }));
-    const todosLosValoresNuevo = datosParaEchartsNuevo.map(item => item.value);
-    const valorMinimoNuevo = todosLosValoresNuevo.length > 0 ? Math.min(...todosLosValoresNuevo) : 0;
-    const valorMaximoNuevo = todosLosValoresNuevo.length > 0 ? Math.max(...todosLosValoresNuevo) : 100;
+    // 7. Configurar y actualizar Mapa Derecho (Paleta Brillante)
     const opcionesMapaNuevo = {
         title: {
-            text: 'Mapa de Argentina Nuevo',
+            text: 'IPC con ponderadores 2017',
             subtext: `Período: ${fechaAFiltrar}`
         },
         tooltip: {
@@ -180,27 +181,47 @@ function filtrarYActualizarMapaNuevo(fechaAFiltrar) {
             formatter: '{b}: {c}'
         },
         visualMap: {
-            min: valorMinimoNuevo,
-            max: valorMaximoNuevo,
+            min: minGlobal, 
+            max: maxGlobal, 
             left: 'right',
             top: 'bottom',
             text: ['Alto', 'Bajo'],
             calculable: true,
             inRange: {
-                color: ['#fff7ec','#fee8c8','#fdbb84','#fc8d59','#ef3b2c']
+                color: ['#fee5d9', '#fcae91', '#fb6a4a', '#cb181d', '#99000d']
             }
         },
-        series: [
-            {
-                name: 'Datos',
-                type: 'map',
-                map: 'mapaArgentina',
-                roam: true,
-                data: datosParaEchartsNuevo // Datos dinámicos según el filtro
+        series: [{
+            name: 'Datos',
+            type: 'map',
+            map: 'mapaArgentina',
+            roam: true,
+            data: datosMapaDerecho,
+            itemStyle: {
+            areaColor: '#140507',       // Color base si una provincia no tiene datos
+            borderColor: '#140507',     // Borde naranja brillante para simular el tubo de neón
+            borderWidth: 0.5,           // Grosor del borde
+            shadowBlur: 1,             // Grado de dispersión del brillo (¡Crucial!)
+            shadowColor: '#ff3300',     // Color del reflejo del brillo neón
+            shadowOffsetX: 0,
+            shadowOffsetY: 0
+        },
+        
+        // EFECTO AL PASAR EL CURSOR (HOVER)
+        emphasis: {
+            itemStyle: {
+                areaColor: '#fff500',   // Se ilumina en amarillo flúor al seleccionarla
+                borderColor: '#ffffff',
+                borderWidth: 2,
+                shadowBlur: 15,         // El brillo se intensifica al pasar el mouse
+                shadowColor: '#fff500'
+            },
+            label: {
+                show: true,
+                color: '#140507'        // Texto de la provincia en blanco brillante
             }
-        ]
+        }
+        }]
     };
-
-    // Actualizar el gráfico aplicando animaciones de transición automáticas
     mapaNuevo.setOption(opcionesMapaNuevo);
 }
