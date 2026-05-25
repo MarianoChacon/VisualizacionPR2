@@ -9,7 +9,7 @@
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
 </head>
-<body background="black">
+<body style="background-color: #070910;">
 
     <div class = "Encabezado" style="align-items: center; justify-content: center; text-align: center;">
         <h2 style="color: #ffffff;">Visualización de datos: Práctica 2</h2>
@@ -44,7 +44,19 @@
         <div class="container mt-5 contenedor-neon" style="flex: 1.6;">
             <div id="mapaNuevo" style="height: 550px; width: 100%;"></div>
         </div>
+        
 
+    </div>
+    <!-- Gráfico de carrera de líneas -->
+
+    <div class="controles-grafico" style="margin: 20px 0; margin-left: 20px;">
+        <label for="filtro-provincia" style="color: #ffffff; margin-right: 10px;">Filtrar por Provincia:</label>
+        <select id="filtro-provincia"></select>
+        <button id="btn-play-pausa" class="btn-neon" style="min-width: 80px;">Pausa</button>
+    </div>
+
+    <div class="container mt-5 contenedor-neon" style="width: 100%; max-width: 1200px; margin: 0 auto;">
+        <div id="graficoCarrera" style="height: 400px; width: 100%;"></div>
     </div>
 
     <!-- SCRIPTS -->

@@ -1,6 +1,13 @@
 let datosInfMensual = [];
 let mapa = null;
-let mapaNuevo = null; 
+let mapaNuevo = null;
+let graficoCarrera = null;
+let indiceAnimacion = 0;
+let temporizadorCarrera = null;
+let datosFiltradosGlobal = null;
+let yDataGralAcumulado = [];
+let yDataIPCAcumulado = [];
+let estaPausado = false;
 
 // Variable de estado global para rastrear qué columna se visualiza en el mapa derecho
 let ponderadorSeleccionado = 'var_mens_pond_gral'; 
@@ -26,6 +33,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const contenedorMapaNuevo = document.getElementById('mapaNuevo');
     mapaNuevo = echarts.init(contenedorMapaNuevo, 'dark');
     mapaNuevo.showLoading();
+
+    const contenedorLineRace = document.getElementById('graficoCarrera');
+    lineRace = echarts.init(contenedorLineRace, 'dark');
 
     const urlGeoJSON = 'ProvinciasArgentina.geojson';
 
@@ -78,21 +88,61 @@ document.addEventListener("DOMContentLoaded", async () => {
         actualizarMapasSincronizados(evento.target.value);
     });
 
-    // CONFIGURACIÓN DE LOS BOTONES DE FILTRO (Solo afectan al mapa derecho)
-    document.querySelectorAll('.btn-neon').forEach(boton => {
-        boton.addEventListener('click', (evento) => {
-            // Alternar clase activa visualmente en los botones
-            document.querySelectorAll('.btn-neon').forEach(b => b.classList.remove('active'));
-            evento.target.classList.add('active');
 
-            // Actualizar el estado global con la columna seleccionada (Nombres reales del JSON)
-            ponderadorSeleccionado = evento.target.getAttribute('data-col');
-
-            // Re-renderizar los mapas con la fecha actual del selector
-            const fechaActual = document.getElementById('filtro-fecha').value;
-            actualizarMapasSincronizados(fechaActual);
-        });
+    cargarProvinciasDisponibles();
+    const selectorProv = document.getElementById('filtro-provincia');
+    if (selectorProv && selectorProv.value) {
+        const datosIniciales = prepararDatosGraficoLinea(selectorProv.value);
+        actualizarGraficoLineaCarrera(datosIniciales);
+    }
+    document.getElementById('filtro-provincia').addEventListener('change', (evento) => {
+        const provinciaSeleccionada = evento.target.value;
+        
+        const nuevosDatos = prepararDatosGraficoLinea(provinciaSeleccionada);
+        const nuevosDatosLinea = prepararDatosGraficoLinea(provinciaSeleccionada);
+        // 2. Reiniciar y lanzar la simulación con estos datos
+        actualizarGraficoLineaCarrera(nuevosDatosLinea);
     });
+    const botonPlayPausa = document.getElementById('btn-play-pausa');
+    if (botonPlayPausa) {
+        botonPlayPausa.addEventListener('click', () => {
+            if (estaPausado) {
+                // Si estaba pausado, se reanuda la carrera
+                estaPausado = false;
+                botonPlayPausa.textContent = 'Pausa';
+                botonPlayPausa.classList.remove('active'); 
+                
+                // Relanzar el intervalo desde la posición guardada
+                if (datosFiltradosGlobal && indiceAnimacion < datosFiltradosGlobal.fechas.length) {
+                    temporizadorCarrera = setInterval(tickCarrera, 300);
+                }
+            } else {
+                // Si estaba corriendo, se pausa el intervalo
+                estaPausado = true;
+                botonPlayPausa.textContent = 'Play';
+                botonPlayPausa.classList.add('active'); // Efecto neón encendido en pausa
+                
+                if (temporizadorCarrera) clearInterval(temporizadorCarrera);
+            }
+        });
+    }
+
+
+    // CONFIGURACIÓN DE LOS BOTONES DE FILTRO (Solo afectan al mapa derecho)
+    document.querySelectorAll('.filtros-ponderador .btn-neon').forEach(boton => {
+    boton.addEventListener('click', (evento) => {
+        // Alternar clase activa visualmente SOLO en los botones del mapa
+        document.querySelectorAll('.filtros-ponderador .btn-neon').forEach(b => b.classList.remove('active'));
+        evento.target.classList.add('active');
+
+        // Actualizar el estado global con la columna seleccionada
+        ponderadorSeleccionado = evento.target.getAttribute('data-col');
+
+        // Re-renderizar los mapas
+        const fechaActual = document.getElementById('filtro-fecha').value;
+        actualizarMapasSincronizados(fechaActual);
+    });
+});
 
     // Hacer que los gráficos sean responsivos
     window.addEventListener('resize', () => {
@@ -262,4 +312,177 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
         }]
     };
     mapaNuevo.setOption(opcionesMapaNuevo);
+}   
+//////////////////////////////////////////////////
+//////////////////FUNCIONES PARA EL GRAFICO LINE RACE//////////////////////////////
+/////////////////////////////////////////////////
+
+
+
+function cargarProvinciasDisponibles() {
+    const selectorProv = document.getElementById('filtro-provincia');
+    
+   
+    const todasLasProvincias = datosInfMensual.map(item => {
+        return item.Provincia;
+    }).filter(Boolean);
+    
+ 
+    const provinciasUnicas = [...new Set(todasLasProvincias)].sort();
+    
+    selectorProv.innerHTML = ''; 
+    provinciasUnicas.forEach(provUnic => {
+        const opcionProv = document.createElement('option');
+        opcionProv.value = provUnic;       
+        opcionProv.textContent = provUnic; 
+        selectorProv.appendChild(opcionProv);
+    });
+}
+
+function prepararDatosGraficoLinea(provinciaAFiltrar) {
+    // 1. Filtrar registros de la provincia una sola vez por rendimiento
+    const registrosFiltrados = datosInfMensual.filter(item => {
+        return item.Provincia && item.Provincia.trim().toLowerCase() === provinciaAFiltrar.trim().toLowerCase();
+    });
+
+    // 2. Mapear datos específicos para cada línea a lo largo del tiempo
+    // Ordenamos cronológicamente para asegurar que la carrera avance de forma correcta
+    registrosFiltrados.sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha));
+
+    const datosLineaIzquierda = registrosFiltrados.map(item => ({
+        name: item.Fecha.substring(0, 7), // Eje X: Solo "AAAA-MM"
+        value: item.v_m_IPC
+    }));
+
+    const datosLineaDerecha = registrosFiltrados.map(item => ({
+        name: item.Fecha.substring(0, 7), // Eje X: Solo "AAAA-MM"
+        value: item[ponderadorSeleccionado] 
+    }));
+
+    // Devolvemos un objeto con las dos series listas para el gráfico
+    return {
+        fechas: datosLineaIzquierda.map(item => item.name),
+        ipc2004: datosLineaIzquierda.map(item => item.value),
+        pond2017: datosLineaDerecha.map(item => item.value)
+    };
+}
+
+function actualizarGraficoLineaCarrera(datosFiltrados) {
+    if (temporizadorCarrera) clearInterval(temporizadorCarrera);
+
+    const contenedor = document.getElementById('graficoCarrera');
+    if (!contenedor) return;
+
+    if (!graficoCarrera) {
+        graficoCarrera = echarts.init(contenedor, 'dark');
+    }
+
+    // Guardar los datos en la variable global y restablecer el botón a "Pausa"
+    datosFiltradosGlobal = datosFiltrados;
+    estaPausado = false;
+    const botonPlayPausa = document.getElementById('btn-play-pausa');
+    if (botonPlayPausa) {
+        botonPlayPausa.textContent = 'Pausa';
+        botonPlayPausa.classList.remove('active');
+    }
+
+    const { fechas } = datosFiltradosGlobal;
+    const todasLasFechasEje = fechas.map(f => f.substring(0, 7));
+
+    const opcionesBase = {
+        backgroundColor: '#070910',
+        title: {
+            text: 'Evolución Comparativa de Inflación',
+            left: 20,
+            padding: [0, 0, 40, 0]
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        dataZoom: [
+                {
+                id: 'dataZoomX',
+                type: 'slider',
+                xAxisIndex: [0],
+                filterMode: 'filter',
+                minSpan: 0,
+                rangeMode: ['value', 'value'] 
+            }
+        ],
+        legend: {
+            data: ['Ponderación General 2017', 'IPC 2004'],
+            top: 20,
+            right: 20
+        },
+        grid: {
+            left: '5%',
+            right: '5%',
+            bottom: '10%',
+            top: '20%',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: todasLasFechasEje, 
+            boundaryGap: false
+        },
+        yAxis: {
+            type: 'value',
+            name: 'Variación %'
+        },
+        series: [
+            {
+                name: 'Ponderación General 2017',
+                type: 'line',
+                data: [],
+                smooth: true,
+                symbol: 'none',
+                lineStyle: { color: '#ff00a6', width: 3 },
+                itemStyle: { color: '#ff00a6'}
+            },
+            {
+                name: 'IPC 2004',
+                type: 'line',
+                data: [],
+                smooth: true,
+                symbol: 'none',
+                lineStyle: { color: '#bfa17a', width: 2 },
+                itemStyle: {color: '#bfa17a'}
+            }
+        ]
+    };
+
+    graficoCarrera.setOption(opcionesBase, true);
+
+    // Reiniciar los contadores e índices globales para la nueva provincia
+    yDataGralAcumulado = new Array(fechas.length).fill(null);
+    yDataIPCAcumulado = new Array(fechas.length).fill(null);
+    indiceAnimacion = 0;
+
+    if (fechas.length > 0) {
+        temporizadorCarrera = setInterval(tickCarrera, 100); 
+    }
+}
+
+// Extraemos tickCarrera como una función independiente en el archivo principal
+function tickCarrera() {
+    if (!datosFiltradosGlobal) return;
+    const { fechas, ipc2004, pond2017 } = datosFiltradosGlobal;
+
+    if (indiceAnimacion >= fechas.length) {
+        clearInterval(temporizadorCarrera); 
+        return;
+    }
+
+    yDataGralAcumulado[indiceAnimacion] = pond2017[indiceAnimacion];
+    yDataIPCAcumulado[indiceAnimacion] = ipc2004[indiceAnimacion];
+
+    graficoCarrera.setOption({
+        series: [
+            { name: 'Ponderación General 2017', data: yDataGralAcumulado },
+            { name: 'IPC 2004', data: yDataIPCAcumulado }
+        ]
+    });
+
+    indiceAnimacion++;
 }
