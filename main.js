@@ -195,11 +195,6 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
     const valoriflNacFiltrado = registrosFiltradosInfNac[0].v_m_IPC;
     const valoriflNacFiltrado17 = registrosFiltradosInfNac[0].v_i_a_IPC_pond17;
 
-    const contenedorInfl04 = document.getElementById('inf_nacional_04');
-    contenedorInfl04.textContent = `Inflación Nacional: ${valoriflNacFiltrado}`;
-    
-    const contenedorInfl17 = document.getElementById('inf_nacional_17');
-    contenedorInfl17.textContent = `Inflación Nacional: ${valoriflNacFiltrado17}`;
 
     // 2. Mapear datos específicos para cada mapa
     const datosMapaIzquierdo = registrosFiltrados.map(item => ({
@@ -243,8 +238,11 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
             formatter: '{b}: {c}'
         },
         visualMap: {
-            min: minIzquierdo, // <- Usa su propio mínimo
-            max: maxIzquierdo, // <- Usa su propio máximo
+            min: minIzquierdo,
+            max: maxIzquierdo,
+            formatter: function (value) {
+                return value.toFixed(1); // Fuerza un decimal en las etiquetas de la barra
+            },
             left: 'left',
             top: 'bottom',
             text: ['Alto', 'Bajo'],
@@ -275,7 +273,20 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
                     formatter: '{b}\n{c}'
                 }
             }
-        }]
+        }],
+          graphic: [
+            {
+            type: 'text',
+            left: 'center',
+            top: 'bottom',
+            style: {
+                text: `Inflación Nacional: ${valoriflNacFiltrado17}`,
+                font: 'normal 18px sans-serif',
+                fill: '#888383'
+            },
+            z: 100
+            }
+        ]
     };
     mapa.setOption(opcionesMapa);
 
@@ -292,8 +303,11 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
             formatter: '{b}: {c}'
         },
         visualMap: {
-            min: minDerecho, // <- Usa su propio mínimo según el botón activo
-            max: maxDerecho, // <- Usa su propio máximo según el botón activo
+            min: minDerecho,
+            max: maxDerecho,
+            formatter: function (value) {
+                return value.toFixed(1); // Fuerza un decimal en las etiquetas de la barra
+            },
             left: 'right',
             top: 'bottom',
             text: ['Alto', 'Bajo'],
@@ -331,7 +345,20 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
                     color: '#ffffff'        // Forzar el texto de la provincia a blanco para que se lea en el fondo oscuro
                 }
             }
-        }]
+        }],
+                  graphic: [
+            {
+            type: 'text',
+            left: 'center',
+            top: 'bottom',
+            style: {
+                text: `Inflación Nacional: ${valoriflNacFiltrado}`,
+                font: 'normal 18px sans-serif',
+                fill: '#e1dbdb'
+            },
+            z: 100
+            }
+        ]
     };
     mapaNuevo.setOption(opcionesMapaNuevo);
 }   

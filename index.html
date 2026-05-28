@@ -24,7 +24,7 @@
             <select id="filtro-fecha"></select>
         </div>
 
-        <div class="filtros-ponderador" style="margin: 15px 0; display: flex; gap: 10px;justify-content: center;;">
+        <div class="filtros-ponderador" style="margin: 15px 0; display: flex; gap: 10px;justify-content: center;">
             <button class="btn-neon active" data-col="var_mens_pond_gral">General</button>
             <button class="btn-neon" data-col="var_mens_pond_prop">Propietario</button>
             <button class="btn-neon" data-col="var_mens_pond_inqui">Inquilino</button>
@@ -39,9 +39,6 @@
         <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
             
             <!-- Inflación nacional ponderador 2004-->
-            <div class="card-body" style="text-align: center; margin-bottom: -10px;">
-                <p id="inf_nacional_04" class="card-text" style="font-size: 18px; font-weight: normal; color: white; margin: 0; opacity: 0.7;"></p>
-            </div>
             
             <!-- Primer mapa -->
             <div class="container mt-2" style="width: 100%; opacity: 0.7;">
@@ -53,9 +50,7 @@
             
         <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
             <!-- Inflación nacional ponderador 2017-->
-            <div class="card-body" style="text-align: center; margin-bottom: -10px;">
-                <p id="inf_nacional_17" class="card-text" style="font-size: 24px; font-weight: bold; color: white; margin: 0;"></p>
-            </div>
+
             <!-- mapa ponderaciones 17 -->
             <div class="container mt-5 contenedor-neon" style="flex: 1.6;">
                 <div id="mapaNuevo" style="height: 550px; width: 100%;"></div>
@@ -65,14 +60,73 @@
 
     <!-- Gráfico de carrera de líneas -->
 
-    <div class="controles-grafico" style="margin: 20px 0; margin-left: 20px;">
-        <label for="filtro-provincia" style="color: #ffffff; margin-right: 10px;">Filtrar por Provincia:</label>
-        <select id="filtro-provincia"></select>
-        <button id="btn-play-pausa" class="btn-neon" style="min-width: 80px;">Pausa</button>
+    <div style="width: 100%; max-width: 1200px; margin: 20px auto 0 auto; padding-left: 12px;">
+        <div class="controles-grafico">
+            <label for="filtro-provincia" style="color: #ffffff; margin-right: 10px;">Filtrar por Provincia:</label>
+            <select id="filtro-provincia"></select>
+            <button id="btn-play-pausa" class="btn-neon" style="min-width: 80px; margin-left: 10px;">Pausa</button>
+        </div>
     </div>
 
     <div class="container mt-5 contenedor-neon" style="width: 100%; max-width: 1200px; margin: 0 auto;">
         <div id="graficoCarrera" style="height: 400px; width: 100%;"></div>
+    </div>
+
+    <div class = "container mt-5" style="width: 100%; max-width: 1200px; margin: 20px auto 0 auto; padding-left: 12px;">
+        <div class="fila-concepto mt-5" style="justify-content: left;">
+            <span style="color: #888686; font-family: sans-serif; font-size: 14px; margin-top: 8px; font-weight: bold;">Propiedades, combustibles, agua y electricidad: </span>
+            <img src="imagenes/agua.png" alt="Concepto inicial" class="tamano-pequeno" style = "border: 2px solid #888686; border-radius:10px; background-color: #dedede">
+            <p style="color: #fdfdfd; font-size: 24px; margin: 0 10px;">&#10140;</p>
+            <img src="imagenes/agua.png" alt="Concepto aumentado" class="tamano-grande" style = "border: 2px solid #ff00a6; border-radius:10px; background-color: #f16ec3">
+        </div>
+        <div class="fila-concepto mt-5" style="justify-content: left;">
+            <span style="color: #888686; font-family: sans-serif; font-size: 14px; margin-top: 8px; font-weight: bold;">Transporte y comunicaciones:</span>
+            <img src="imagenes/transporte-publico.png" alt="Concepto inicial" class="tamano-pequeno" style = "border: 2px solid #888686; border-radius:10px; background-color: #dedede">
+            <p style="color: #fdfdfd; font-size: 24px; margin: 0 10px;">&#10140;</p>
+            <img src="imagenes/transporte-publico.png" alt="Concepto aumentado" class="tamano-grande" style = "border: 2px solid #ff00a6; border-radius:10px; background-color: #f16ec3">
+        </div>
+        <div class="fila-concepto mt-5" style="justify-content: left;">
+            <span style="color: #888686; font-family: sans-serif; font-size: 14px; margin-top: 8px; font-weight: bold;">Esparcimiento:</span>
+            <img src="imagenes/Esparcimiento.png" alt="Concepto inicial" class="tamano-pequeno" style = "border: 2px solid #888686; border-radius:10px; background-color: #dedede">
+            <p style="color: #fdfdfd; font-size: 24px; margin: 0 10px;">&#10140;</p>
+            <img src="imagenes/Esparcimiento.png" alt="Concepto aumentado" class="tamano-grande" style = "border: 2px solid #ff00a6; border-radius:10px; background-color: #f16ec3">
+        </div>
+        <div class="fila-concepto mt-5" style="justify-content: left;">
+            <span style="color: #888686; font-family: sans-serif; font-size: 14px; margin-top: 8px; font-weight: bold;">Indumentaria y calzado:</span>
+            <img src="imagenes/Alimentos.png" alt="Concepto aumentado" class="tamano-grande" style = "border: 2px solid #888686; border-radius:10px; background-color: #dedede">
+            <p style="color: #fdfdfd; font-size: 24px; margin: 0 10px;">&#10140;</p>
+            <img src="imagenes/Alimentos.png" alt="Concepto inicial" class="tamano-pequeno" style = "border: 2px solid #ff00a6; border-radius:10px; background-color: #f16ec3">
+        </div>
+        <div class="fila-concepto mt-5" style="justify-content: left;">
+            <span style="color: #888686; font-family: sans-serif; font-size: 14px; margin-top: 8px; font-weight: bold;">Indumentaria y calzado:</span>
+            <img src="imagenes/ropa.png" alt="Concepto aumentado" class="tamano-grande" style = "border: 2px solid #888686; border-radius:10px; background-color: #dedede">
+            <p style="color: #fdfdfd; font-size: 24px; margin: 0 10px;">&#10140;</p>
+            <img src="imagenes/ropa.png" alt="Concepto inicial" class="tamano-pequeno" style = "border: 2px solid #ff00a6; border-radius:10px; background-color: #f16ec3">
+        </div>
+        <div class="fila-concepto mt-5" style="justify-content: left;">
+            <span style="color: #888686; font-family: sans-serif; font-size: 14px; margin-top: 8px; font-weight: bold;">Equipamiento y mantenimiento del hogar:</span>
+            <img src="imagenes/servicio-tecnico.png" alt="Concepto aumentado" class="tamano-grande" style = "border: 2px solid #888686; border-radius:10px; background-color: #dedede">
+            <p style="color: #fdfdfd; font-size: 24px; margin: 0 10px;">&#10140;</p>
+            <img src="imagenes/servicio-tecnico.png" alt="Concepto inicial" class="tamano-pequeno" style = "border: 2px solid #ff00a6; border-radius:10px; background-color: #f16ec3">
+        </div>
+        <div class="fila-concepto mt-5" style="justify-content: left;">
+            <span style="color: #888686; font-family: sans-serif; font-size: 14px; margin-top: 8px; font-weight: bold;">Salud:</span>
+            <img src="imagenes/estetoscopio.png" alt="Concepto aumentado" class="tamano-grande" style = "border: 2px solid #888686; border-radius:10px; background-color: #dedede">
+            <p style="color: #fdfdfd; font-size: 24px; margin: 0 10px;">&#10140;</p>
+            <img src="imagenes/estetoscopio.png" alt="Concepto inicial" class="tamano-pequeno" style = "border: 2px solid #ff00a6; border-radius:10px; background-color: #f16ec3">
+        </div>
+        <div class="fila-concepto mt-5" style="justify-content: left;">
+            <span style="color: #888686; font-family: sans-serif; font-size: 14px; margin-top: 8px; font-weight: bold;">Bienes varios:</span>
+            <img src="imagenes/bienes_varios.png" alt="Concepto aumentado" class="tamano-grande" style = "border: 2px solid #888686; border-radius:10px; background-color: #dedede">
+            <p style="color: #fdfdfd; font-size: 24px; margin: 0 10px;">&#10140;</p>
+            <img src="imagenes/bienes_varios.png" alt="Concepto inicial" class="tamano-pequeno" style = "border: 2px solid #ff00a6; border-radius:10px; background-color: #f16ec3">
+        </div>
+        <div class="fila-concepto mt-5" style="justify-content: left;">
+            <span style="color: #888686; font-family: sans-serif; font-size: 14px; margin-top: 8px; font-weight: bold;">Enseñanza:</span>
+            <img src="imagenes/ensenanzas.png" alt="Concepto aumentado" class="tamano-mediano" style = "border: 2px solid #888686; border-radius:10px; background-color: #dedede">
+            <p style="color: #fdfdfd; font-size: 24px; margin: 0 10px;">&#10140;</p>
+            <img src="imagenes/ensenanzas.png" alt="Concepto inicial" class="tamano-mediano" style = "border: 2px solid #ff00a6; border-radius:10px; background-color: #f16ec3">
+        </div>
     </div>
 
     <!-- SCRIPTS -->
