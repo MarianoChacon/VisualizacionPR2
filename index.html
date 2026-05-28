@@ -35,18 +35,34 @@
     
     <div style="display: flex; gap: 40px; width: 100%; max-width: 1200px; margin: 0 auto; align-items: center; justify-content: space-between;">
         
-        <!-- Primer mapa -->
-        <div class="container mt-5" style="flex: 1;margin-right: auto; opacity: 0.7;">
-            <div id="mapa" style="height: 450px; width: 100%;"></div>
-        </div>
         
-        <!-- Mapa nuevo -->
-        <div class="container mt-5 contenedor-neon" style="flex: 1.6;">
-            <div id="mapaNuevo" style="height: 550px; width: 100%;"></div>
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+            
+            <!-- Inflación nacional ponderador 2004-->
+            <div class="card-body" style="text-align: center; margin-bottom: -10px;">
+                <p id="inf_nacional_04" class="card-text" style="font-size: 18px; font-weight: normal; color: white; margin: 0; opacity: 0.7;"></p>
+            </div>
+            
+            <!-- Primer mapa -->
+            <div class="container mt-2" style="width: 100%; opacity: 0.7;">
+                <div id="mapa" style="height: 450px; width: 100%;"></div>
+            </div>
+            
         </div>
-        
 
+            
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+            <!-- Inflación nacional ponderador 2017-->
+            <div class="card-body" style="text-align: center; margin-bottom: -10px;">
+                <p id="inf_nacional_17" class="card-text" style="font-size: 24px; font-weight: bold; color: white; margin: 0;"></p>
+            </div>
+            <!-- mapa ponderaciones 17 -->
+            <div class="container mt-5 contenedor-neon" style="flex: 1.6;">
+                <div id="mapaNuevo" style="height: 550px; width: 100%;"></div>
+            </div>
+        </div>
     </div>
+
     <!-- Gráfico de carrera de líneas -->
 
     <div class="controles-grafico" style="margin: 20px 0; margin-left: 20px;">

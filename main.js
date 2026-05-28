@@ -1,4 +1,5 @@
 let datosInfMensual = [];
+let datosInfNacional = [];
 let mapa = null;
 let mapaNuevo = null;
 let graficoCarrera = null;
@@ -15,6 +16,16 @@ let ponderadorSeleccionado = 'var_mens_pond_gral';
 async function leerDatosInfMensual() {
     try {
         const respuesta = await fetch('inf_mens.json');
+        if (!respuesta.ok) throw new Error("No se pudo cargar el JSON");
+        return await respuesta.json();
+    } catch (error) {
+        console.error("Error cargando el JSON:", error);
+    }
+}
+
+async function leerDatosInfNacional() {
+    try {
+        const respuesta = await fetch('ipc_nacional.json');
         if (!respuesta.ok) throw new Error("No se pudo cargar el JSON");
         return await respuesta.json();
     } catch (error) {
@@ -41,16 +52,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
         // Carga el JSON de datos y el GeoJSON del mapa en paralelo
-        const [respuestaDatos, respuestaGeo] = await Promise.all([
+        const [respuestaDatos, respuestaGeo, respuestaInfNac] = await Promise.all([
             leerDatosInfMensual(),
             fetch(urlGeoJSON).then(res => {
                 if (!res.ok) throw new Error(`Error GeoJSON: ${res.statusText}`);
                 return res.json();
-            })
+            }),
+            leerDatosInfNacional()
         ]);
 
         datosInfMensual = respuestaDatos;
         const datosMapa = respuestaGeo;
+        datosInfNacional = respuestaInfNac
         
         mapa.hideLoading();
         mapaNuevo.hideLoading();
@@ -178,6 +191,15 @@ function cargarFechasDisponibles() {
 function actualizarMapasSincronizados(fechaAFiltrar) {
     // 1. Filtrar registros una sola vez por rendimiento
     const registrosFiltrados = datosInfMensual.filter(item => item.Fecha && item.Fecha.startsWith(fechaAFiltrar));
+    const registrosFiltradosInfNac = datosInfNacional.filter(item => item.Fecha && item.Fecha.startsWith(fechaAFiltrar));
+    const valoriflNacFiltrado = registrosFiltradosInfNac[0].v_m_IPC;
+    const valoriflNacFiltrado17 = registrosFiltradosInfNac[0].v_i_a_IPC_pond17;
+
+    const contenedorInfl04 = document.getElementById('inf_nacional_04');
+    contenedorInfl04.textContent = `Inflación Nacional: ${valoriflNacFiltrado}`;
+    
+    const contenedorInfl17 = document.getElementById('inf_nacional_17');
+    contenedorInfl17.textContent = `Inflación Nacional: ${valoriflNacFiltrado17}`;
 
     // 2. Mapear datos específicos para cada mapa
     const datosMapaIzquierdo = registrosFiltrados.map(item => ({
