@@ -270,7 +270,7 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
             text: ['Alto', 'Bajo'],
             calculable: true,
             inRange: {
-                color: ['#fee5d9', '#fcae91', '#fb6a4a', '#cb181d', '#99000d'] // Tus colores originales
+                color: ['#F9F1E7', '#DCC5A1' , '#B78953', '#80532C', '#42250F']
             }
         },
         series: [{
@@ -328,14 +328,14 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
             min: minDerecho,
             max: maxDerecho,
             formatter: function (value) {
-                return value.toFixed(1); // Fuerza un decimal en las etiquetas de la barra
+                return value.toFixed(1);
             },
             left: 'right',
             top: 'bottom',
             text: ['Alto', 'Bajo'],
             calculable: true,
             inRange: {
-                color: ['#fee5d9', '#fcae91', '#fb6a4a', '#cb181d', '#99000d'] // Tus colores originales
+                color: ['#FFF0F9', '#FFB3E1' , '#FF66C4', '#FF00A6', '#6A0045']
             }
         },
         series: [{
@@ -350,17 +350,17 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
                 borderColor: '#140507',     
                 borderWidth: 0.5,           
                 shadowBlur: 1,             
-                shadowColor: '#ff3300',     
+                shadowColor: '#FF66C4',     
                 shadowOffsetX: 0,
                 shadowOffsetY: 0
             },
                         emphasis: {
                 itemStyle: {
-                    areaColor: '#ff7a00',   // Cambia a un tono naranja iluminado al posicionarse encima
+                    areaColor: '#FFA700',   // Cambia a un tono naranja iluminado al posicionarse encima
                     borderColor: '#ffffff', // Borde blanco para resaltar la provincia seleccionada
                     borderWidth: 1.5,
                     shadowBlur: 10,         // Incrementa el brillo en el hover
-                    shadowColor: '#ff3300'
+                    shadowColor: '#bb7b03'
                 },
                 label: {
                     show: true,
@@ -417,6 +417,7 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
     });
 
     const opcionesGraficoPonderadores = {
+                backgroundColor: 'transparent',
                 title: {
                     text: '¿Por qué cambia el índice de inflación?'
                 },
@@ -433,9 +434,11 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
                     padding:[45,0,0,0]
                 },
                 grid: {
-                     top: '25%'
+                    left: 45,
+                    right: 20,
+                    top: '40%'
                 },
-                color: ['#888383','#ff00a6'],
+                color: ['#C2B299','#ff00a6'],
                 yAxis: {
                     show:false,
                     type: 'value',
@@ -581,7 +584,7 @@ function actualizarGraficoLineaCarrera(datosFiltrados) {
         graficoCarrera = echarts.init(contenedor, 'dark');
     }
 
-    // Guardar los datos en la variable global y restablecer el botón a "Pausa"
+    
     datosFiltradosGlobal = datosFiltrados;
     estaPausado = false;
     const botonPlayPausa = document.getElementById('btn-play-pausa');
@@ -594,11 +597,11 @@ function actualizarGraficoLineaCarrera(datosFiltrados) {
     const todasLasFechasEje = fechas.map(f => f.substring(0, 7));
 
     const opcionesBase = {
-        backgroundColor: '#070910',
+        backgroundColor: 'transparent',
         title: {
-            text: 'Evolución Comparativa de Inflación',
+            text: 'Evolución Comparativa de Inflación mensual',
             left: 20,
-            padding: [0, 0, 40, 0]
+            padding: [0, 0, 40, 30]
         },
         tooltip: {
             trigger: 'axis'
@@ -610,17 +613,18 @@ function actualizarGraficoLineaCarrera(datosFiltrados) {
                 xAxisIndex: [0],
                 filterMode: 'filter',
                 minSpan: 0,
-                rangeMode: ['value', 'value'] 
+                rangeMode: ['value', 'value'],
+                bottom: 10,
             }
         ],
         legend: {
             data: ['Ponderación General 2017', 'IPC 2004'],
             top: 20,
-            right: 20
+            right: 70
         },
         grid: {
-            left: '5%',
-            right: '5%',
+            left: 45,
+            right: 20,
             bottom: '10%',
             top: '20%',
             containLabel: true
@@ -632,7 +636,9 @@ function actualizarGraficoLineaCarrera(datosFiltrados) {
         },
         yAxis: {
             type: 'value',
-            name: 'Variación %'
+            name: 'Variación %',
+            min:0,
+            max:30
         },
         series: [
             {
@@ -650,8 +656,55 @@ function actualizarGraficoLineaCarrera(datosFiltrados) {
                 data: [],
                 smooth: true,
                 symbol: 'none',
-                lineStyle: { color: '#bfa17a', width: 2 },
-                itemStyle: {color: '#bfa17a'}
+                lineStyle: { color: '#C2B299', width: 2 },
+                itemStyle: {color: '#C2B299'},
+                markLine: {
+                    animation: false,
+                    symbol: ['none', 'none'],
+                    lineStyle: {
+                        color: '#b5b1b4',
+                        type: 'dashed',
+                        width: 1
+                    },
+                    data: [
+                        {
+                        xAxis: '2023-12',
+                        label: {
+                            show: true,
+                            position: 'end',
+                            align: 'left',
+                            offset: [10, 15],
+                            formatter: 'Javier Milei',
+                            color: '#7B1FA2',
+                            fontSize: 10
+                        }
+                        },
+                        {
+                        xAxis: '2019-12',
+                        label: {
+                            show: true,
+                            position: 'end',
+                            align: 'left',
+                            offset: [10, 15],
+                            formatter: 'Alberto Fernández',
+                            color: '#00A8E8',
+                            fontSize: 10
+                        }
+                        },
+                        {
+                        xAxis: '2016-12',
+                        label: {
+                            show: true,
+                            position: 'end',
+                            align: 'left',
+                            offset: [10, 15],
+                            formatter: 'Mauricio Macri',
+                            color: '#FFD54F',
+                            fontSize: 10
+                        }
+                        }
+                    ]
+                }
             }
         ]
     };
