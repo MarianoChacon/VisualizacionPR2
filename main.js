@@ -1,5 +1,6 @@
 let datosInfMensual = [];
 let datosInfNacional = [];
+let datosPonderadores = [];
 let mapa = null;
 let mapaNuevo = null;
 let graficoCarrera = null;
@@ -9,6 +10,9 @@ let datosFiltradosGlobal = null;
 let yDataGralAcumulado = [];
 let yDataIPCAcumulado = [];
 let estaPausado = false;
+let ponderadores_concepto = [];
+let ponderadores_04 = [];
+let ponderadores_17 = [];
 
 // Variable de estado global para rastrear qué columna se visualiza en el mapa derecho
 let ponderadorSeleccionado = 'var_mens_pond_gral'; 
@@ -33,6 +37,16 @@ async function leerDatosInfNacional() {
     }
 }
 
+async function leerDatosPonderadores() {
+    try {
+        const respuesta = await fetch('diferencia_ponderadores.json');
+        if (!respuesta.ok) throw new Error("No se pudo cargar el JSON");
+        return await respuesta.json();
+    } catch (error) {
+        console.error("Error cargando el JSON:", error);
+    }
+}
+
 // 1. Esperar a que el DOM esté completamente cargado
 document.addEventListener("DOMContentLoaded", async () => {
     
@@ -50,20 +64,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const urlGeoJSON = 'ProvinciasArgentina.geojson';
 
+    const contenedorGrafPond = document.getElementById('graficoPonderadores');
+    grafPond = echarts.init(contenedorGrafPond, 'dark');
+
     try {
         // Carga el JSON de datos y el GeoJSON del mapa en paralelo
-        const [respuestaDatos, respuestaGeo, respuestaInfNac] = await Promise.all([
+        const [respuestaDatos, respuestaGeo, respuestaInfNac, respuestaPonderadores] = await Promise.all([
             leerDatosInfMensual(),
             fetch(urlGeoJSON).then(res => {
                 if (!res.ok) throw new Error(`Error GeoJSON: ${res.statusText}`);
                 return res.json();
             }),
-            leerDatosInfNacional()
+            leerDatosInfNacional(),
+            leerDatosPonderadores()
         ]);
 
         datosInfMensual = respuestaDatos;
         const datosMapa = respuestaGeo;
-        datosInfNacional = respuestaInfNac
+        datosInfNacional = respuestaInfNac;
+        ponderadores_concepto = respuestaPonderadores.map(d => d.Concepto)
+        ponderadores_04 = respuestaPonderadores.map(d => d.pond_04)
+        ponderadores_17 = respuestaPonderadores.map(d => d.pond_17)
+
         
         mapa.hideLoading();
         mapaNuevo.hideLoading();
@@ -361,6 +383,139 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
         ]
     };
     mapaNuevo.setOption(opcionesMapaNuevo);
+
+
+    ////////////////////////////// GRAFICO PONDERADORES//////////////
+
+    const iconos = {
+        img0: 'imagenes_bco/Alimentos.png',
+        img6: 'imagenes_bco/agua.png',
+        img4: 'imagenes_bco/bienes_varios.png',
+        casa: 'imagenes_bco/Casa.png',
+        img8: 'imagenes_bco/ensenanzas.png',
+        img7: 'imagenes_bco/esparcimiento.png',
+        img2: 'imagenes_bco/estetoscopio.png',
+        img1: 'imagenes_bco/ropa.png',
+        img3: 'imagenes_bco/servicio-tecnico.png',
+        img5: 'imagenes_bco/transporte-publico.png'
+    };
+    const datosFormateados04 = ponderadores_04.map((valor, index) => {
+        return {
+            value: valor,
+            iconoKey: 'img' + index
+    };
+    });
+
+    const estilosRich = {};
+    ponderadores_04.forEach((_, index) => {
+        const key = 'img' + index;
+        estilosRich[key] = {
+            backgroundColor: { image: iconos[key] },
+            height: 30, // Alto del ícono en píxeles
+            width: 30
+        };
+    });
+
+    const opcionesGraficoPonderadores = {
+                title: {
+                    text: '¿Por qué cambia el índice de inflación?'
+                },
+                tooltip: {
+                    show: false,
+                    trigger: 'axis',
+                    axisPointer: {
+                    type: 'shadow'
+                    }
+                },
+                legend: {
+                    top:'top',
+                    left:'center',
+                    padding:[45,0,0,0]
+                },
+                grid: {
+                     top: '25%'
+                },
+                color: ['#888383','#ff00a6'],
+                yAxis: {
+                    show:false,
+                    type: 'value',
+                    boundaryGap: [0, 0.05],
+                    name: "% del gasto"
+                    
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ponderadores_concepto,
+                    axisLabel: {
+                    interval: 0,
+                    rich: {
+                        textoNormal: {
+                            fontWeight: 'normal',
+                            align: 'center'
+                        },
+                        textoDestacado: {
+                            fontSize: 14,
+                            fontWeight: 'bold',
+                            color: '#ff00a6',
+                            align: 'center'
+                        }
+                    },
+                    formatter: function (value) {
+                        const text_value =  value.split(' ').join('\n');
+                        if (value === 'Alimentos y bebidas' || value === 'Transporte y comunic.' || value == 'Propiedades, combustibles, agua y electricidad') {
+                             return '{textoDestacado|' + text_value + '}';
+                        }
+                        return '{textoNormal|' + text_value + '}';
+                    }
+                    }
+                },
+                series: [
+
+                    {
+                    name: 'Ponderadores 2004',
+                    type: 'bar',
+                    data: datosFormateados04,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        distance: 10,
+                        formatter: function (params) {
+                            const icono = '{estiloIcono|}{' + params.data.iconoKey + '|}';
+                            const numeroAdentro = '{numeroGris|' + params.value + '}';
+                            return icono + '\n\n\n' + numeroAdentro + '%'; 
+ 
+                        },
+                        rich: {
+                                ...estilosRich,
+                                estiloIcono: {
+                                    align: 'left',
+                                    padding: [0, 0, 0, 30]
+                                },
+                                numeroGris: {
+                                    color: '#ffffff',
+                                    fontSize: 11,
+                                    offset: [0, 45] 
+                                }
+                            }
+                        },
+                    },
+                    {
+                    name: 'Ponderadores 2017',
+                    type: 'bar',
+                    data: ponderadores_17,
+                    label: {
+                        show:true,
+                        position: 'top',
+                        color: '#ff00a6',
+                        formatter: '{c}%'
+                    }
+                    }
+                ]
+
+    };
+
+    grafPond.setOption(opcionesGraficoPonderadores);
+    
 }   
 //////////////////////////////////////////////////
 //////////////////FUNCIONES PARA EL GRAFICO LINE RACE//////////////////////////////
@@ -511,6 +666,7 @@ function actualizarGraficoLineaCarrera(datosFiltrados) {
     if (fechas.length > 0) {
         temporizadorCarrera = setInterval(tickCarrera, 100); 
     }
+
 }
 
 // Extraemos tickCarrera como una función independiente en el archivo principal

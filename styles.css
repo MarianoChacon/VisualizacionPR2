@@ -4,7 +4,8 @@
 }
 
 body {
-    background-color: #121212;;
+    background-color: #121212;
+    padding-bottom: 60px;
 }
 
 .contenedor-neon {
