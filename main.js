@@ -744,3 +744,20 @@ function tickCarrera() {
 
     indiceAnimacion++;
 }
+
+
+
+
+
+document.querySelector('.magico').addEventListener('click', (e) => {
+    e.preventDefault(); // Evita que la página salte bruscamente al nuevo link
+
+    // Activa la transición nativa del navegador
+    document.startViewTransition(() => {
+        // Opción A: Si cambias el contenido inyectando HTML dinámico
+        // document.body.innerHTML = nuevoContenidoHTML;
+        
+        // Opción B: Si necesitas redirigir a otro archivo .html físico
+        window.location.href = "nueva_pagina.html"; 
+    });
+});

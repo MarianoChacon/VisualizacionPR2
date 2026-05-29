@@ -3,11 +3,6 @@
     height: 600px;
 }
 
-body {
-    background-color: #121212;
-    padding-bottom: 60px;
-}
-
 .contenedor-neon {
     background-color: #111422;
     border-radius: 15px;
@@ -114,11 +109,70 @@ body {
     width: 100%;
     max-width: 1300px;
     margin: 0 auto; 
-    border: 1px solid #222633;    /* Borde sutil para dar estructura */
-    border-radius: 12px;          /* Bordes redondeados sutiles */
-    padding: 24px;                /* Espacio interno para que los divs de adentro no toquen el borde */
-    margin-bottom: 20px;          /* Espacio exterior hacia abajo */
+    border: 1px solid #222633;
+    border-radius: 12px;
+    padding: 24px; 
+    margin-bottom: 20px;          
     
-    /* Opcional: Un reflejo sutil en los bordes para dar efecto premium */
+
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); 
+}
+
+.magico {
+    background-color: #14161f;
+    color: #a6a6a6;
+    border: 1px solid #33394d;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+
+/* 1. Preparamos el escenario tridimensional en la pantalla */
+::view-transition-group(root) {
+    perspective: 1500px; /* Da la sensación de profundidad de la cámara */
+}
+
+/* 2. Configuración de la página actual (Frente) */
+::view-transition-old(root) {
+    animation: 2.5s cubic-bezier(0.4, 0, 0.2, 1) both giro-salida;
+    backface-visibility: hidden; /* Esconde la página vieja cuando se da la vuelta */
+    transform-origin: center center;
+}
+
+/* 3. Configuración de la nueva página (Detrás) */
+::view-transition-new(root) {
+    animation: 2.5s cubic-bezier(0.4, 0, 0.2, 1) both giro-entrada;
+    backface-visibility: hidden;
+    transform-origin: center center;
+}
+
+/* 🔄 ANIMACIONES DE GIRO 3D */
+
+/* La página actual rota 180 grados hacia la izquierda y se oculta */
+@keyframes giro-salida {
+    from {
+        transform: rotateY(0deg);
+        opacity: 1;
+    }
+    to {
+        transform: rotateY(-180deg);
+        opacity: 0; /* Suaviza el cambio en el punto medio */
+    }
+}
+
+/* La nueva página empieza invertida a 180 grados y gira hasta quedar de frente (0deg) */
+@keyframes giro-entrada {
+    from {
+        transform: rotateY(180deg);
+        opacity: 0;
+    }
+    to {
+        transform: rotateY(0deg);
+        opacity: 1;
+    }
 }
