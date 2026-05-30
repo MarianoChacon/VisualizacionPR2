@@ -67,6 +67,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const contenedorGrafPond = document.getElementById('graficoPonderadores');
     grafPond = echarts.init(contenedorGrafPond, 'dark');
 
+    
+    
+
     try {
         // Carga el JSON de datos y el GeoJSON del mapa en paralelo
         const [respuestaDatos, respuestaGeo, respuestaInfNac, respuestaPonderadores] = await Promise.all([
@@ -164,10 +167,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
     // CONFIGURACIÓN DE LOS BOTONES DE FILTRO (Solo afectan al mapa derecho)
-    document.querySelectorAll('.filtros-ponderador .btn-neon').forEach(boton => {
+    document.querySelectorAll('.filtros-ponderador .btn-neon, .filtros-ponderador .btn-neon-rosa').forEach(boton => {
     boton.addEventListener('click', (evento) => {
         // Alternar clase activa visualmente SOLO en los botones del mapa
-        document.querySelectorAll('.filtros-ponderador .btn-neon').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.filtros-ponderador .btn-neon, .filtros-ponderador .btn-neon-rosa').forEach(b => b.classList.remove('active'));
         evento.target.classList.add('active');
 
         // Actualizar el estado global con la columna seleccionada
@@ -217,6 +220,11 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
     const valoriflNacFiltrado = registrosFiltradosInfNac[0].v_m_IPC;
     const valoriflNacFiltrado17 = registrosFiltradosInfNac[0].v_i_a_IPC_pond17;
 
+    const contenedorInfNac04 = document.getElementById('valor-tarjeta-04');
+    contenedorInfNac04.textContent = `+${valoriflNacFiltrado}%`
+
+    const contenedorInfNac17 = document.getElementById('valor-tarjeta-17');
+    contenedorInfNac17.textContent = `+${valoriflNacFiltrado17}%`
 
     // 2. Mapear datos específicos para cada mapa
     const datosMapaIzquierdo = registrosFiltrados.map(item => ({
@@ -295,20 +303,7 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
                     formatter: '{b}\n{c}'
                 }
             }
-        }],
-          graphic: [
-            {
-            type: 'text',
-            left: 'center',
-            top: 'bottom',
-            style: {
-                text: `Inflación Nacional: ${valoriflNacFiltrado17}`,
-                font: 'normal 18px sans-serif',
-                fill: '#888383'
-            },
-            z: 100
-            }
-        ]
+        }]
     };
     mapa.setOption(opcionesMapa);
 
@@ -367,20 +362,7 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
                     color: '#ffffff'        // Forzar el texto de la provincia a blanco para que se lea en el fondo oscuro
                 }
             }
-        }],
-                  graphic: [
-            {
-            type: 'text',
-            left: 'center',
-            top: 'bottom',
-            style: {
-                text: `Inflación Nacional: ${valoriflNacFiltrado}`,
-                font: 'normal 18px sans-serif',
-                fill: '#e1dbdb'
-            },
-            z: 100
-            }
-        ]
+        }]
     };
     mapaNuevo.setOption(opcionesMapaNuevo);
 
