@@ -13,8 +13,9 @@ let estaPausado = false;
 let ponderadores_concepto = [];
 let ponderadores_04 = [];
 let ponderadores_17 = [];
+let nodeGraphData = [];
 
-// Variable de estado global para rastrear qué columna se visualiza en el mapa derecho
+
 let ponderadorSeleccionado = 'var_mens_pond_gral'; 
 
 async function leerDatosInfMensual() {
@@ -47,118 +48,153 @@ async function leerDatosPonderadores() {
     }
 }
 
-// 1. Esperar a que el DOM esté completamente cargado
+async function leerDatosCorrelaciones() {
+    try {
+        const respuesta = await fetch('datos_correlacion_graph.json');
+        if (!respuesta.ok) throw new Error("No se pudo cargar el JSON");
+        return await respuesta.json();
+    } catch (error) {
+        console.error("Error cargando el JSON:", error);
+    }
+}
+
+
 document.addEventListener("DOMContentLoaded", async () => {
     
-    // 2. Seleccionar los contenedores HTML e inicializar los Mapas en modo oscuro
+
     const contenedorMapa = document.getElementById('mapa');
-    mapa = echarts.init(contenedorMapa, 'dark');
-    mapa.showLoading();
+    if (contenedorMapa) {
+        mapa = echarts.init(contenedorMapa, 'dark');
+        mapa.showLoading();
+    };
 
     const contenedorMapaNuevo = document.getElementById('mapaNuevo');
-    mapaNuevo = echarts.init(contenedorMapaNuevo, 'dark');
-    mapaNuevo.showLoading();
+    if (contenedorMapaNuevo) {
+        mapaNuevo = echarts.init(contenedorMapaNuevo, 'dark');
+        mapaNuevo.showLoading();
+    }
+
 
     const contenedorLineRace = document.getElementById('graficoCarrera');
-    lineRace = echarts.init(contenedorLineRace, 'dark');
+    if (contenedorLineRace) {
+        lineRace = echarts.init(contenedorLineRace, 'dark');
+    }
 
     const urlGeoJSON = 'ProvinciasArgentina.geojson';
 
     const contenedorGrafPond = document.getElementById('graficoPonderadores');
-    grafPond = echarts.init(contenedorGrafPond, 'dark');
+    if (contenedorGrafPond) {
+        grafPond = echarts.init(contenedorGrafPond, 'dark');
+    }
 
     
-    
-
+   
     try {
-        // Carga el JSON de datos y el GeoJSON del mapa en paralelo
-        const [respuestaDatos, respuestaGeo, respuestaInfNac, respuestaPonderadores] = await Promise.all([
+
+        const [respuestaDatos, respuestaGeo, respuestaInfNac, respuestaPonderadores, respuestaCorr] = await Promise.all([
             leerDatosInfMensual(),
             fetch(urlGeoJSON).then(res => {
                 if (!res.ok) throw new Error(`Error GeoJSON: ${res.statusText}`);
                 return res.json();
             }),
             leerDatosInfNacional(),
-            leerDatosPonderadores()
+            leerDatosPonderadores(),
+            leerDatosCorrelaciones()
         ]);
 
         datosInfMensual = respuestaDatos;
         const datosMapa = respuestaGeo;
         datosInfNacional = respuestaInfNac;
-        ponderadores_concepto = respuestaPonderadores.map(d => d.Concepto)
-        ponderadores_04 = respuestaPonderadores.map(d => d.pond_04)
-        ponderadores_17 = respuestaPonderadores.map(d => d.pond_17)
-
+        nodeGraphData = respuestaCorr; 
+        const contenedorNodeGraph = document.getElementById('nodeGraph');
+        let nodeGraph = null;
+        if (contenedorNodeGraph) {
+            nodeGraph = echarts.init(contenedorNodeGraph, 'dark');
+            nodeGraphFunction(nodeGraph);
+        }
         
-        mapa.hideLoading();
-        mapaNuevo.hideLoading();
+        if (respuestaPonderadores && respuestaPonderadores.length > 0) {
+            ponderadores_concepto = respuestaPonderadores.map(d => d.Concepto);
+            ponderadores_04 = respuestaPonderadores.map(d => d.pond_04);
+            ponderadores_17 = respuestaPonderadores.map(d => d.pond_17);
+        }
+        
+        if (mapa) mapa.hideLoading();
+        if (mapaNuevo) mapaNuevo.hideLoading();
 
-        // Normalizar nombres del GeoJSON para compatibilidad con tildes
+   
         datosMapa.features.forEach(feature => {
             if (feature.properties && feature.properties.nombre) {
                 feature.properties.name = feature.properties.nombre;
             }
         });
 
-        // Registrar el mapa en ECharts
+
         echarts.registerMap('mapaArgentina', datosMapa);
 
         if (datosInfMensual && datosInfMensual.length > 0) {
-            // Llenar el selector del HTML con las fechas del JSON
+   
             cargarFechasDisponibles();
             
             const selector = document.getElementById('filtro-fecha');
-            selector.selectedIndex = selector.options.length - 1;
+            if (selector) {
+                selector.selectedIndex = selector.options.length - 1;
+                const fechaFinal = selector.value;
+                actualizarMapasSincronizados(fechaFinal);
+            }
             
-            const fechaFinal = selector.value;
-            // Inicializar ambos mapas
-            actualizarMapasSincronizados(fechaFinal);
         }
 
     } catch (error) {
         console.error("Error en la inicialización:", error);
-        mapa.hideLoading();
-        mapaNuevo.hideLoading();
+        if (mapa) mapa.hideLoading();
+        if (mapaNuevo) mapaNuevo.hideLoading();
     }
 
-    // Escuchar el cambio de fecha desde el HTML usando la función unificada
-    document.getElementById('filtro-fecha').addEventListener('change', (evento) => {
-        actualizarMapasSincronizados(evento.target.value);
-    });
+
+    const filtroFecha = document.getElementById('filtro-fecha');
+    if (filtroFecha) {
+        filtroFecha.addEventListener('change', (evento) => {
+            actualizarMapasSincronizados(evento.target.value);
+        });
+    }
 
 
-    cargarProvinciasDisponibles();
     const selectorProv = document.getElementById('filtro-provincia');
-    if (selectorProv && selectorProv.value) {
-        const datosIniciales = prepararDatosGraficoLinea(selectorProv.value);
-        actualizarGraficoLineaCarrera(datosIniciales);
-    }
-    document.getElementById('filtro-provincia').addEventListener('change', (evento) => {
-        const provinciaSeleccionada = evento.target.value;
+    if (selectorProv) {
+        cargarProvinciasDisponibles();
         
-        const nuevosDatos = prepararDatosGraficoLinea(provinciaSeleccionada);
-        const nuevosDatosLinea = prepararDatosGraficoLinea(provinciaSeleccionada);
-        // 2. Reiniciar y lanzar la simulación con estos datos
-        actualizarGraficoLineaCarrera(nuevosDatosLinea);
-    });
+        if (selectorProv.value) {
+            const datosIniciales = prepararDatosGraficoLinea(selectorProv.value);
+            actualizarGraficoLineaCarrera(datosIniciales);
+        }
+
+        selectorProv.addEventListener('change', (evento) => {
+            const provinciaSeleccionada = evento.target.value;
+            const nuevosDatos = prepararDatosGraficoLinea(provinciaSeleccionada);
+            const nuevosDatosLinea = prepararDatosGraficoLinea(provinciaSeleccionada);
+  
+            actualizarGraficoLineaCarrera(nuevosDatosLinea);
+        });
+    }
     const botonPlayPausa = document.getElementById('btn-play-pausa');
     if (botonPlayPausa) {
         botonPlayPausa.addEventListener('click', () => {
             if (estaPausado) {
-                // Si estaba pausado, se reanuda la carrera
+
                 estaPausado = false;
                 botonPlayPausa.textContent = 'Pausa';
                 botonPlayPausa.classList.remove('active'); 
                 
-                // Relanzar el intervalo desde la posición guardada
+
                 if (datosFiltradosGlobal && indiceAnimacion < datosFiltradosGlobal.fechas.length) {
                     temporizadorCarrera = setInterval(tickCarrera, 300);
                 }
             } else {
-                // Si estaba corriendo, se pausa el intervalo
+  
                 estaPausado = true;
                 botonPlayPausa.textContent = 'Play';
-                botonPlayPausa.classList.add('active'); // Efecto neón encendido en pausa
+                botonPlayPausa.classList.add('active');
                 
                 if (temporizadorCarrera) clearInterval(temporizadorCarrera);
             }
@@ -166,43 +202,44 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
 
-    // CONFIGURACIÓN DE LOS BOTONES DE FILTRO (Solo afectan al mapa derecho)
+
     document.querySelectorAll('.filtros-ponderador .btn-neon, .filtros-ponderador .btn-neon-rosa').forEach(boton => {
     boton.addEventListener('click', (evento) => {
-        // Alternar clase activa visualmente SOLO en los botones del mapa
+
         document.querySelectorAll('.filtros-ponderador .btn-neon, .filtros-ponderador .btn-neon-rosa').forEach(b => b.classList.remove('active'));
         evento.target.classList.add('active');
 
-        // Actualizar el estado global con la columna seleccionada
+  
         ponderadorSeleccionado = evento.target.getAttribute('data-col');
 
-        // Re-renderizar los mapas
+
         const fechaActual = document.getElementById('filtro-fecha').value;
         actualizarMapasSincronizados(fechaActual);
     });
 });
 
-    // Hacer que los gráficos sean responsivos
+  
     window.addEventListener('resize', () => {
         mapa.resize();
         mapaNuevo.resize();
     });
 });
 
-// Extrae fechas únicas de tu JSON y llena el elemento HTML <select id="filtro-fecha">
+
 function cargarFechasDisponibles() {
     const selector = document.getElementById('filtro-fecha');
+    if (!selector) return;
     
-    // 1. Extraer las fechas y recortarlas para quedarnos solo con "AAAA-MM"
+
     const todasLasFechasCortas = datosInfMensual.map(item => {
         const fechaLimpia = item.Fecha && item.Fecha.includes('T') ? item.Fecha.split('T')[0] : item.Fecha;
         return fechaLimpia ? fechaLimpia.substring(0, 7) : '';
     }).filter(Boolean);
     
-    // 2. Eliminar duplicados y ordenar cronológicamente
+
     const fechasUnicas = [...new Set(todasLasFechasCortas)].sort();
     
-    // 3. Limpiar e inyectar las opciones en el HTML
+
     selector.innerHTML = ''; 
     fechasUnicas.forEach(fechaAnioMes => {
         const opcion = document.createElement('option');
@@ -212,9 +249,15 @@ function cargarFechasDisponibles() {
     });
 }
 
-// Filtra datosGlobales por la fecha seleccionada y actualiza ambos mapas de forma independiente
+
 function actualizarMapasSincronizados(fechaAFiltrar) {
-    // 1. Filtrar registros una sola vez por rendimiento
+
+    if (!mapa || !mapaNuevo) {
+        console.log("No estás en la página de mapas. Saltando actualización.");
+        return; 
+    }
+
+  
     const registrosFiltrados = datosInfMensual.filter(item => item.Fecha && item.Fecha.startsWith(fechaAFiltrar));
     const registrosFiltradosInfNac = datosInfNacional.filter(item => item.Fecha && item.Fecha.startsWith(fechaAFiltrar));
     const valoriflNacFiltrado = registrosFiltradosInfNac[0].v_m_IPC;
@@ -226,7 +269,7 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
     const contenedorInfNac17 = document.getElementById('valor-tarjeta-17');
     contenedorInfNac17.textContent = `+${valoriflNacFiltrado17}%`
 
-    // 2. Mapear datos específicos para cada mapa
+  
     const datosMapaIzquierdo = registrosFiltrados.map(item => ({
         name: item.Provincia,
         value: item.v_m_IPC
@@ -237,18 +280,18 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
         value: item[ponderadorSeleccionado] 
     }));
 
-    // 3. Extraer arrays con todos los valores numéricos
+
     const valoresIzquierdo = datosMapaIzquierdo.map(item => item.value).filter(v => v !== undefined && v !== null);
     const valoresDerecho = datosMapaDerecho.map(item => item.value).filter(v => v !== undefined && v !== null);
 
-    // 4. Calcular mínimos y máximos locales PROPIOS para cada mapa (Adiós minGlobal/maxGlobal)
+
     const minIzquierdo = valoresIzquierdo.length > 0 ? Math.min(...valoresIzquierdo) : 0;
     const maxIzquierdo = valoresIzquierdo.length > 0 ? Math.max(...valoresIzquierdo) : 100;
 
     const minDerecho = valoresDerecho.length > 0 ? Math.min(...valoresDerecho) : 0;
     const maxDerecho = valoresDerecho.length > 0 ? Math.max(...valoresDerecho) : 100;
 
-    // Mapear los nombres amigables para el título dinámico del mapa derecho
+
     const titulosPonderadores = {
         'var_mens_pond_gral': 'Ponderación General',
         'var_mens_pond_prop': 'Ponderación Propietario',
@@ -256,7 +299,7 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
         'var_mens_pond_ocupante': 'Ponderación Ocupante'
     };
 
-    // 5. Configurar y actualizar Mapa Izquierdo (Paleta e Índices aislados)
+  
     const opcionesMapa = {
         title: {
             text: 'IPC con ponderadores 2004',
@@ -271,7 +314,7 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
             min: minIzquierdo,
             max: maxIzquierdo,
             formatter: function (value) {
-                return value.toFixed(1); // Fuerza un decimal en las etiquetas de la barra
+                return value.toFixed(1);
             },
             left: 'left',
             top: 'bottom',
@@ -307,7 +350,7 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
     };
     mapa.setOption(opcionesMapa);
 
-    // 6. Configurar y actualizar Mapa Derecho (Filtros y Escala independiente)
+
     const opcionesMapaNuevo = {
         backgroundColor:'#111422',
         title: {
@@ -351,15 +394,15 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
             },
                         emphasis: {
                 itemStyle: {
-                    areaColor: '#FFA700',   // Cambia a un tono naranja iluminado al posicionarse encima
-                    borderColor: '#ffffff', // Borde blanco para resaltar la provincia seleccionada
+                    areaColor: '#FFA700',   
+                    borderColor: '#ffffff', 
                     borderWidth: 1.5,
-                    shadowBlur: 10,         // Incrementa el brillo en el hover
+                    shadowBlur: 10,      
                     shadowColor: '#bb7b03'
                 },
                 label: {
                     show: true,
-                    color: '#ffffff'        // Forzar el texto de la provincia a blanco para que se lea en el fondo oscuro
+                    color: '#ffffff'      
                 }
             }
         }]
@@ -393,7 +436,7 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
         const key = 'img' + index;
         estilosRich[key] = {
             backgroundColor: { image: iconos[key] },
-            height: 30, // Alto del ícono en píxeles
+            height: 30, 
             width: 30
         };
     });
@@ -498,13 +541,49 @@ function actualizarMapasSincronizados(fechaAFiltrar) {
                 ]
 
     };
+    
 
     grafPond.setOption(opcionesGraficoPonderadores);
-    
 }   
-//////////////////////////////////////////////////
+
+
+function nodeGraphFunction(nodeGraph) {
+    console.log("Datos del Grafo completos:", nodeGraphData);
+    console.log("Nodos:", nodeGraphData?.nodes);
+    console.log("Conexiones (Links):", nodeGraphData?.links);
+    var optionNodeGraph = {
+        title: {
+            text: 'Relación entre las inflación y variables teóricas que la afectan',
+            style: { color: '#ffffff' },
+            subtext: '(El grosor de las líneas indica el grado de correlación)'},
+        tooltip: {
+            formatter: function (params) {
+                if (params.dataType === 'edge') {
+                    return `Correlación: <b>${params.value}</b>`;
+                }
+                    return params.name;
+            }
+        },
+        series: [{
+            type: 'graph',
+            layout: 'force',
+            roam: true, 
+            label: { show: true, position: 'right', color: '#f4f4f6' },
+            force: { initLayout: 'circular', repaint: true, edgeLength: 160, repulsion: 800, gravity: 0.05 },
+            data: nodeGraphData.nodes,
+            links: nodeGraphData.links
+        }]
+    };
+    
+    nodeGraph.setOption(optionNodeGraph);
+
+};
+
+
+
+////////////////////////////////////////////////////////////////////////////////
 //////////////////FUNCIONES PARA EL GRAFICO LINE RACE//////////////////////////////
-/////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -529,26 +608,25 @@ function cargarProvinciasDisponibles() {
 }
 
 function prepararDatosGraficoLinea(provinciaAFiltrar) {
-    // 1. Filtrar registros de la provincia una sola vez por rendimiento
+
     const registrosFiltrados = datosInfMensual.filter(item => {
         return item.Provincia && item.Provincia.trim().toLowerCase() === provinciaAFiltrar.trim().toLowerCase();
     });
 
-    // 2. Mapear datos específicos para cada línea a lo largo del tiempo
-    // Ordenamos cronológicamente para asegurar que la carrera avance de forma correcta
+
     registrosFiltrados.sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha));
 
     const datosLineaIzquierda = registrosFiltrados.map(item => ({
-        name: item.Fecha.substring(0, 7), // Eje X: Solo "AAAA-MM"
+        name: item.Fecha.substring(0, 7),
         value: item.v_m_IPC
     }));
 
     const datosLineaDerecha = registrosFiltrados.map(item => ({
-        name: item.Fecha.substring(0, 7), // Eje X: Solo "AAAA-MM"
+        name: item.Fecha.substring(0, 7),
         value: item[ponderadorSeleccionado] 
     }));
 
-    // Devolvemos un objeto con las dos series listas para el gráfico
+  
     return {
         fechas: datosLineaIzquierda.map(item => item.name),
         ipc2004: datosLineaIzquierda.map(item => item.value),
@@ -693,7 +771,7 @@ function actualizarGraficoLineaCarrera(datosFiltrados) {
 
     graficoCarrera.setOption(opcionesBase, true);
 
-    // Reiniciar los contadores e índices globales para la nueva provincia
+  
     yDataGralAcumulado = new Array(fechas.length).fill(null);
     yDataIPCAcumulado = new Array(fechas.length).fill(null);
     indiceAnimacion = 0;
@@ -704,7 +782,7 @@ function actualizarGraficoLineaCarrera(datosFiltrados) {
 
 }
 
-// Extraemos tickCarrera como una función independiente en el archivo principal
+
 function tickCarrera() {
     if (!datosFiltradosGlobal) return;
     const { fechas, ipc2004, pond2017 } = datosFiltradosGlobal;
@@ -731,15 +809,24 @@ function tickCarrera() {
 
 
 
-document.querySelector('.magico').addEventListener('click', (e) => {
-    e.preventDefault(); // Evita que la página salte bruscamente al nuevo link
 
-    // Activa la transición nativa del navegador
-    document.startViewTransition(() => {
-        // Opción A: Si cambias el contenido inyectando HTML dinámico
-        // document.body.innerHTML = nuevoContenidoHTML;
-        
-        // Opción B: Si necesitas redirigir a otro archivo .html físico
-        window.location.href = "nueva_pagina.html"; 
+const botonMagico = document.querySelector('.magico');
+if (botonMagico) {
+    botonMagico.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        document.startViewTransition(() => {
+            window.location.href = "nueva_pagina.html";
+        });
     });
-});
+}
+
+const botonVolver = document.querySelector('.volver');
+if (botonVolver) {
+    botonVolver.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.startViewTransition(() => {
+            window.location.href = "index.html";
+        });
+    });
+}

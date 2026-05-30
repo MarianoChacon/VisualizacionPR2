@@ -32,5 +32,6 @@ df_inf_men_gral_prov['Key'] = df_inf_men_gral_prov['Provincia'] + df_inf_men_gra
 df_completo = pd.merge(df_inf_men_gral_prov, df_final, on='Key', how='inner')
 df_completo.rename(columns={'Provincia_x':'Provincia','Fecha_x':'Fecha'}, inplace = True)
 df_completo.drop(columns=['Key', 'Fecha_y', 'Provincia_y'], inplace=True)
+df_completo.to_clipboard()
 df_completo.to_json('inf_mens.json', orient='records', force_ascii=False, date_format='iso')
 # df_inf_men_gral_prov.to_json('inf_mens.json', orient='records', force_ascii=False, date_format='iso')

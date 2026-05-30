@@ -1,0 +1,274 @@
+{
+    "nodes": [
+        {
+            "name": "Inflación",
+            "value": "Inflación",
+            "symbolSize": 60,
+            "itemStyle": {
+                "color": "#ff00a6"
+            }
+        },
+        {
+            "name": "Salario privado registrado",
+            "value": "Salario privado registrado",
+            "symbolSize": 30
+        },
+        {
+            "name": "Salario publico",
+            "value": "Salario publico",
+            "symbolSize": 30
+        },
+        {
+            "name": "Salario no registrado",
+            "value": "Salario no registrado",
+            "symbolSize": 30
+        },
+        {
+            "name": "Inflacion esperada",
+            "value": "Inflacion esperada",
+            "symbolSize": 30
+        },
+        {
+            "name": "Tipo cambio minorista",
+            "value": "Tipo cambio minorista",
+            "symbolSize": 30
+        },
+        {
+            "name": "Tipo cambio mayorista",
+            "value": "Tipo cambio mayorista",
+            "symbolSize": 30
+        },
+        {
+            "name": "Tipo cambio informal",
+            "value": "Tipo cambio informal",
+            "symbolSize": 30
+        },
+        {
+            "name": "Cant dinero liquido",
+            "value": "Cant dinero liquido",
+            "symbolSize": 30
+        }
+    ],
+    "links": [
+        {
+            "source": "Inflación",
+            "target": "Inflacion esperada",
+            "value": 0.833,
+            "lineStyle": {
+                "color": "#ff00a6",
+                "width": 4.164760592121149,
+                "opacity": 0.8329521184242298
+            }
+        },
+        {
+            "source": "Inflación",
+            "target": "Cant dinero liquido",
+            "value": 0.716,
+            "lineStyle": {
+                "color": "#ff00a6",
+                "width": 3.582345009948625,
+                "opacity": 0.7164690019897251
+            }
+        },
+        {
+            "source": "Salario privado registrado",
+            "target": "Salario publico",
+            "value": 0.999,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 4.996078484004306,
+                "opacity": 0.9992156968008611
+            }
+        },
+        {
+            "source": "Salario privado registrado",
+            "target": "Salario no registrado",
+            "value": 0.965,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 4.824539710752159,
+                "opacity": 0.9649079421504319
+            }
+        },
+        {
+            "source": "Salario privado registrado",
+            "target": "Tipo cambio minorista",
+            "value": 0.989,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 4.947410375514113,
+                "opacity": 0.9894820751028225
+            }
+        },
+        {
+            "source": "Salario privado registrado",
+            "target": "Tipo cambio mayorista",
+            "value": 0.615,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 3.0764603472248147,
+                "opacity": 0.615292069444963
+            }
+        },
+        {
+            "source": "Salario privado registrado",
+            "target": "Tipo cambio informal",
+            "value": 0.958,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 4.787512812584222,
+                "opacity": 0.9575025625168443
+            }
+        },
+        {
+            "source": "Salario privado registrado",
+            "target": "Cant dinero liquido",
+            "value": 0.262,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 1.310351932522642,
+                "opacity": 0.2620703865045284
+            }
+        },
+        {
+            "source": "Salario publico",
+            "target": "Salario no registrado",
+            "value": 0.963,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 4.813964802675773,
+                "opacity": 0.9627929605351547
+            }
+        },
+        {
+            "source": "Salario publico",
+            "target": "Tipo cambio minorista",
+            "value": 0.99,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 4.952015089475036,
+                "opacity": 0.9904030178950072
+            }
+        },
+        {
+            "source": "Salario publico",
+            "target": "Tipo cambio mayorista",
+            "value": 0.62,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 3.1008739388655404,
+                "opacity": 0.6201747877731081
+            }
+        },
+        {
+            "source": "Salario publico",
+            "target": "Tipo cambio informal",
+            "value": 0.964,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 4.820694730132048,
+                "opacity": 0.9641389460264095
+            }
+        },
+        {
+            "source": "Salario publico",
+            "target": "Cant dinero liquido",
+            "value": 0.284,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 1.4203503692785182,
+                "opacity": 0.28407007385570365
+            }
+        },
+        {
+            "source": "Salario no registrado",
+            "target": "Tipo cambio minorista",
+            "value": 0.947,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 4.7339061364094,
+                "opacity": 0.9467812272818801
+            }
+        },
+        {
+            "source": "Salario no registrado",
+            "target": "Tipo cambio mayorista",
+            "value": 0.665,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 3.3263037764865584,
+                "opacity": 0.6652607552973117
+            }
+        },
+        {
+            "source": "Salario no registrado",
+            "target": "Tipo cambio informal",
+            "value": 0.879,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 4.394449857724155,
+                "opacity": 0.8788899715448308
+            }
+        },
+        {
+            "source": "Inflacion esperada",
+            "target": "Cant dinero liquido",
+            "value": 0.666,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 3.329283623526769,
+                "opacity": 0.6658567247053538
+            }
+        },
+        {
+            "source": "Tipo cambio minorista",
+            "target": "Tipo cambio mayorista",
+            "value": 0.622,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 3.109845346205762,
+                "opacity": 0.6219690692411524
+            }
+        },
+        {
+            "source": "Tipo cambio minorista",
+            "target": "Tipo cambio informal",
+            "value": 0.971,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 4.856050577340435,
+                "opacity": 0.971210115468087
+            }
+        },
+        {
+            "source": "Tipo cambio minorista",
+            "target": "Cant dinero liquido",
+            "value": 0.34,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 1.6987896468975676,
+                "opacity": 0.33975792937951355
+            }
+        },
+        {
+            "source": "Tipo cambio mayorista",
+            "target": "Tipo cambio informal",
+            "value": 0.573,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 2.862721698009679,
+                "opacity": 0.5725443396019358
+            }
+        },
+        {
+            "source": "Tipo cambio informal",
+            "target": "Cant dinero liquido",
+            "value": 0.43,
+            "lineStyle": {
+                "color": "#00ff62",
+                "width": 2.149050132164126,
+                "opacity": 0.42981002643282523
+            }
+        }
+    ]
+}
